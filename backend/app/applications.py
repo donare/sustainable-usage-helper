@@ -42,7 +42,9 @@ def get_icon(application_path):
 
         h_dc.DrawIcon((0, 0), h_icon)
         bitmap_raw = h_bmp.GetBitmapBits(True)
-        img = Image.frombytes("RGBA", (ICON_SIZE, ICON_SIZE), bitmap_raw)
+
+        r,g,b,a = Image.frombytes("RGBA", (ICON_SIZE, ICON_SIZE), bitmap_raw).split()
+        img = Image.merge("RGBA", (b,g,r,a))
 
         with tempfile.TemporaryFile() as tf:
             img.save(tf, format="png")
