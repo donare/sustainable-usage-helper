@@ -70,23 +70,37 @@ def generate_image(bitmap):
     return img
 
 
-def get_process_list():
+def get_applications():
     running_processes = win32process.EnumProcesses()
 
-    rows = []
+    applications = dict()
 
     for pid in running_processes[1:]:
         try:
             application_path = get_application_path(pid)
+            if application_path in applications:
+                applications[application_path].append(pid)
+            else:
+                applications[application_path] = [pid]
         except:
             print(f"Couldn't open Process {pid}.")
             continue
 
+    return applications
+
+
+def get_process_list():
+    applications = get_applications()
+
+    rows = []
+
+    for app_path, pid_list in applications.items():
         rows.append({
-            "pid": pid,
-            "application": os.path.basename(application_path),
-            "icon": get_icon(application_path)
-        })
+        "pid": pid_list,
+        "application_path": app_path,
+        "application": os.path.basename(app_path),
+        "icon": get_icon(app_path)
+    })
 
     return rows
 
