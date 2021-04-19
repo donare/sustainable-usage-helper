@@ -8,7 +8,9 @@ function App() {
       <header className="App-header">
         Sustainable Usage Helper
       </header>
+      <div className="PL">
       <ProcessList />
+      </div>
     </div>
   );
 }

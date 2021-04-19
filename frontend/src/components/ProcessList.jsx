@@ -1,4 +1,5 @@
 import React, {useState, useEffect} from "react";
+import './ProcessListStyle.css';
 
 export default function ProcessList(props) {
     const [data, setData] = useState([]);
@@ -23,18 +24,20 @@ export default function ProcessList(props) {
     
     const listItems = () => data.map((process) => 
     <tr key = {process.pid}>
-        <td><img src={`data:image/png;base64,${process.icon}`}  /></td>
-        <td>{process.pid}</td>
-        <td>{process.application}</td>
+        <td className="PTableCell"><img src={`data:image/png;base64,${process.icon}`}  /></td>
+        <td className="PTableCell">{process.pid
+        .map((pid) => <span className="Pid">{pid}</span>)
+        .reduce((prev,curr) => [prev, ', ', curr])}</td>
+        <td className="PTableCell">{process.application}</td>
     </tr>)
 
     return  <div className="Process-Table">
-        <table>
+        <table className="PTable">
             <thead>
                 <tr>
-                    <td>Icon</td>
-                    <td>PID</td>
-                    <td>Application Name</td>
+                    <th className="icon">Icon</th>
+                    <th className="pid">PIDs</th>
+                    <th className="application">Application Name</th>
                 </tr>
             </thead>
             <tbody>{listItems()}</tbody>
