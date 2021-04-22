@@ -5,12 +5,12 @@ from sqlalchemy.orm import relationship
 from .database import Base
 
 
-# association_table = Table(
-#     "association",
-#     Base.metadata,
-#     Column("left_id", Integer, ForeignKey("left.id")),
-#     Column("right_id", Integer, ForeignKey("right.id"))
-# )
+block_associations = Table(
+    "block_set_associations",
+    Base.metadata,
+    app_id = Column(Integer, ForeignKey("apps.id")),
+    block_set_id = Column(Integer, ForeignKey("block_sets.id"))
+)
 
 
 class Application(Base):
@@ -19,7 +19,7 @@ class Application(Base):
     id = Column(Integer, primary_key=True, index=True)
     app_path = Column(String, unique=True, index=True)
 
-    block_sets = relationship("BlockSet", back_populates="apps")
+    block_sets = relationship("BlockSet", secondary=block_associations, back_populates="apps")
 
 
 class BlockSet(Base):
@@ -28,7 +28,7 @@ class BlockSet(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
 
-    applications = relationship("Application", back_populates="block_sets")
+    applications = relationship("Application", secondary=block_associations, back_populates="block_sets")
     time_frames = relationship("TimeFrame", back_populates="block_sets")
 
 
@@ -40,4 +40,5 @@ class TimeFrame(Base):
     end_time = Column(Time, index=True)
     weekdays = Column(Integer, index=True)
 
-    block_sets = relationship("BlockSet", back_populates="time_frames")
+    block_set_id = Column(Integer, ForeignKey("block_sets.id"))
+    block_set = relationship("BlockSet", back_populates="time_frames")
