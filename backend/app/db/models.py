@@ -2,14 +2,14 @@ from sqlalchemy import String, Integer, Time
 from sqlalchemy import Column, Table, ForeignKey
 from sqlalchemy.orm import relationship
 
-from .database import Base
+from app.db.config import Base
 
 
 block_associations = Table(
     "block_set_associations",
     Base.metadata,
-    app_id = Column(Integer, ForeignKey("apps.id")),
-    block_set_id = Column(Integer, ForeignKey("block_sets.id"))
+    Column("apps_id", Integer, ForeignKey("apps.id")),
+    Column("block_sets_id", Integer, ForeignKey("block_sets.id"))
 )
 
 
@@ -28,8 +28,8 @@ class BlockSet(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
 
-    applications = relationship("Application", secondary=block_associations, back_populates="block_sets")
-    time_frames = relationship("TimeFrame", back_populates="block_sets")
+    apps = relationship("Application", secondary=block_associations, back_populates="block_sets")
+    time_frames = relationship("TimeFrame", back_populates="block_set")
 
 
 class TimeFrame(Base):
