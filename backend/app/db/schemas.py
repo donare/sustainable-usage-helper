@@ -48,7 +48,7 @@ class BlockSetCreate(BlockSetBase):
 
 class BlockSet(BlockSetBase):
     id: int
-    applications: List[Application] = []
+    apps: List[Application] = []
     time_frames: List[TimeFrame] = []
 
     class Config:

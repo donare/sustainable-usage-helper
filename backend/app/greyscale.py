@@ -8,6 +8,7 @@ def is_greyscale_active():
 
     return bool(winreg.QueryValueEx(regkey, "Active")[0])
 
+
 def toggle_greyscale():
     keyboard.send("ctrl+windows+c")
 

@@ -1,32 +1,21 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import greyscale, applications
 
-from . import crud, models, schemas
-from .database import SessionLocal, engine
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from .db import schemas, service
+from .db.models.blockset import BlockSet
+from app.db.config import engine, get_db
 
 from typing import List
 
-models.Base.metadata.create_all(bind=engine)
-
 app = FastAPI()
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 
 origins = [
     "http://localhost:3000",
     "localhost:3000"
 ]
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,6 +24,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+
+@app.on_event("startup")
+async def startup():
+    await service.recreate_tables()
+    await service.create_defaults()
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    pass
 
 
 @app.get("/", tags=["root"])
@@ -59,35 +59,24 @@ async def get_running_processes() ->dict:
     return applications.get_process_list()
 
 
-@app.get("/block_sets/", response_model=List[schemas.BlockSet])
-def get_block_sets(db: Session = Depends(get_db)):
-    return crud.get_block_sets(db)
+@app.get("/block_sets/", response_model=List[schemas.BlockSet])  # todo: fixen, dass beim service tatsächlich das Schema herauskommt!
+async def get_block_sets(db_session: AsyncSession = Depends(get_db)):
+    return await BlockSet.find_all(db_session)
 
 
 @app.get("/block_sets/{block_set_id}")
-def get_block_set(block_set_id: int, db: Session = Depends(get_db)):
-    block_set = crud.get_block_set(db, block_set_id)
-    if block_set is None:
-        raise HTTPException(status_code=404, detail="Block Set not found")
-    return block_set
+async def get_block_set(block_set_id: int, db_session: AsyncSession = Depends(get_db)):
+    return await BlockSet.find_by_id(db_session, block_set_id)
 
 
 @app.get("/block_sets/{block_set_id}/applications")
-def get_block_set(block_set_id: int, db: Session = Depends(get_db)):
-    block_set = crud.get_block_set(db, block_set_id)
-    if block_set is None:
-        raise HTTPException(status_code=404, detail="Block Set not found")
-
-    apps = crud.get_applications_by_block_set(db, block_set_id)
-
-    if apps is None:
-        raise HTTPException(status_code=404, detail="Block Set not found or ")
-    return block_set
+async def get_block_set(block_set_id: int, db_session: AsyncSession = Depends(get_db)):
+    return await BlockSet.get_applications(db_session, block_set_id)
 
 
 @app.get("/block_sets/{block_set_id}/{application_path}/block/")
-def block_application(block_set_id: int, application_path: str, db: Session = Depends(get_db)):
-
-    crud.create_application(db=db, )
+async def block_application(block_set_id: int, application_path: str, db_session: AsyncSession = Depends(get_db)):
+    pass
+    # crud.create_application(db=db, )
 
 
