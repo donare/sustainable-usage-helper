@@ -12,13 +12,13 @@ from app.db.schemas import ApplicationCreate
 class Application(Base, BaseMixin):
     app_path = Column(String, unique=True, index=True)
 
-    block_sets = relationship("BlockSet", secondary=block_associations, back_populates="application", lazy='selectin')
+    block_sets = relationship("BlockSet", secondary=block_associations, back_populates="apps", lazy='selectin')
 
     def __init__(self, app: ApplicationCreate):
         self.app_path = app.app_path
 
     @classmethod
-    async def find_by_path(cls, db_session: AsyncSession, app_path: str):
+    async def find_by_path(cls, app_path: str, db_session: AsyncSession):
         q = select(cls).where(cls.app_path == app_path)
         r = await db_session.execute(q)
 

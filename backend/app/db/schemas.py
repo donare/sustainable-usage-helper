@@ -21,13 +21,15 @@ class Application(ApplicationBase):
 
 
 class TimeFrameBase(BaseModel):
-    start_time: time
-    end_time: time
-    weekdays: int
+    start_time: Optional[time]
+    end_time: Optional[time]
+    weekdays: Optional[int]
 
 
 class TimeFrameCreate(TimeFrameBase):
-    pass
+    start_time: time
+    end_time: time
+    weekdays: int
 
 
 class TimeFrame(TimeFrameBase):

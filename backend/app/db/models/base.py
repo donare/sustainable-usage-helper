@@ -21,7 +21,9 @@ class BaseMixin:
     async def add_self(self, db_session: AsyncSession):
         try:
             db_session.add(self)
-            return await db_session.commit()
+            await db_session.commit()
+            await db_session.refresh(self)
+            return self
         except SQLAlchemyError:
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
@@ -48,7 +50,7 @@ class BaseMixin:
             return instance
 
     @classmethod
-    async def find_by_id(cls, db_session: AsyncSession, id: int):
+    async def find_by_id(cls, id: int, db_session: AsyncSession):
         q = select(cls).where(cls.id == id)
         r = await db_session.execute(q)
         instance = r.scalars().first()

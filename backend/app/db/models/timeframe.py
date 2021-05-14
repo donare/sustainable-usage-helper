@@ -15,7 +15,7 @@ class TimeFrame(Base, BaseMixin):
     weekdays = Column(Integer, index=True)
 
     block_set_id = Column(Integer, ForeignKey("blockset.id"))
-    block_set = relationship("BlockSet", back_populates="timeframe", lazy='selectin')
+    block_set = relationship("BlockSet", back_populates="time_frames", lazy='selectin')
 
     def __init__(self, time_frame: TimeFrameCreate):
         self.start_time = time_frame.start_time
