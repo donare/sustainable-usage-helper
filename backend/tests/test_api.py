@@ -5,6 +5,10 @@ from httpx import AsyncClient
 from app.api import app
 from app.db.service import recreate_tables, create_defaults
 
+NEW_BLOCK_SET_NAME = "New Blockset"
+APP_PATH1 = "/path/to/app"
+APP_PATH2 = "/path/to/other/app"
+
 @pytest.mark.asyncio
 @pytest.fixture(autouse=True)
 async def reset_database():
@@ -20,7 +24,19 @@ async def test_root():
     assert response.json() == {"message": "Hello world!"}
 
 @pytest.mark.asyncio
-async def test_block_sets():
+async def test_block_set_remove_nonexisting():
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        response = await ac.get("/block_sets/")
+        block_sets = response.json()
+
+        block_set_ids = [bs["id"] for bs in block_sets]
+
+        remove_response = await ac.get("/block_sets/{}/delete".format(max(block_set_ids) + 1))
+
+        assert remove_response.status_code == 404
+
+@pytest.mark.asyncio
+async def test_block_set_insert_and_remove():
     async with AsyncClient(app=app, base_url="http://test") as ac:
         before_response = await ac.get("/block_sets/")
         before_block_sets = before_response.json()
@@ -28,13 +44,11 @@ async def test_block_sets():
         assert before_response.status_code == 200
         assert len(before_block_sets) == 1
         
-        BLOCK_SET = "New Blockset"
-
-        insert_response = await ac.post("/block_sets/", json={"name": BLOCK_SET})
+        insert_response = await ac.post("/block_sets/", json={"name": NEW_BLOCK_SET_NAME})
         new_block_set = insert_response.json()
 
         assert insert_response.status_code == 200
-        assert new_block_set["name"] == BLOCK_SET
+        assert new_block_set["name"] == NEW_BLOCK_SET_NAME
         assert new_block_set["id"] == 2
 
         after_insert_response = await ac.get("/block_sets/")
@@ -53,10 +67,8 @@ async def test_block_sets():
         assert after_remove_response.status_code == 200
         assert len(after_remove_block_sets) == 1
 
-        # todo: removing nonexisting block sets
-
 @pytest.mark.asyncio
-async def test_blocking():
+async def test_block_and_unblock():
     async with AsyncClient(app=app, base_url="http://test") as ac:
         before_response = await ac.get("/block_sets/")
         before_block_sets = before_response.json()
@@ -64,16 +76,13 @@ async def test_blocking():
         assert before_response.status_code == 200
         assert len(before_block_sets) == 1
 
-        insert_response = await ac.post("/block_sets/", json={"name": "New Blockset"})
+        insert_response = await ac.post("/block_sets/", json={"name": NEW_BLOCK_SET_NAME})
         new_block_set = insert_response.json()
 
         assert insert_response.status_code == 200
-        assert new_block_set["name"] == "New Blockset"
+        assert new_block_set["name"] == NEW_BLOCK_SET_NAME
         assert new_block_set["id"] == 2
         assert len(new_block_set["apps"]) == 0
-
-        APP_PATH1 = "/path/to/app"
-        APP_PATH2 = "/path/to/other/app"
 
         block_response = await ac.post(
             "/block_sets/{}/block/".format(new_block_set["id"]),
@@ -96,7 +105,52 @@ async def test_blocking():
         assert len(block_set_unblocked["apps"]) == 1
         assert block_set_unblocked["apps"][0]["app_path"] == APP_PATH2
 
-    # todo: trying to block existing applications
-    # todo: trying to remove nonexisting applications
+@pytest.mark.asyncio
+async def test_block_existing():
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        insert_response = await ac.post("/block_sets/", json={"name": NEW_BLOCK_SET_NAME})
+        new_block_set = insert_response.json()
+
+        assert insert_response.status_code == 200
+        
+        assert len(new_block_set["apps"]) == 0
+
+        block_response = await ac.post(
+            "/block_sets/{}/block/".format(new_block_set["id"]),
+            json=[{"app_path": APP_PATH1},{"app_path": APP_PATH2}])
+        block_set_blocked = block_response.json()
+        
+        assert len(block_set_blocked["apps"]) == 2
+
+        block_existing_response = await ac.post(
+            "/block_sets/{}/block/".format(new_block_set["id"]),
+            json=[{"app_path": APP_PATH1}])
+       
+        assert block_existing_response.status_code == 303 # see other --> send id of existing application
+
+@pytest.mark.asyncio
+async def test_unblock_nonexisting():
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        insert_response = await ac.post("/block_sets/", json={"name": NEW_BLOCK_SET_NAME})
+        new_block_set = insert_response.json()
+
+        assert insert_response.status_code == 200
+        
+        assert len(new_block_set["apps"]) == 0
+
+        block_response = await ac.post(
+            "/block_sets/{}/block/".format(new_block_set["id"]),
+            json=[{"app_path": APP_PATH1}])
+        block_set_blocked = block_response.json()
+        
+        assert block_response.status_code == 200
+        assert len(block_set_blocked["apps"]) == 1
+
+        unblock_response = await ac.post(
+            "/block_sets/{}/unblock/".format(new_block_set["id"]),
+            json=[{"app_path": APP_PATH2}])
+        
+        assert unblock_response.status_code == 404
+
 
 # todo: Timeframes
