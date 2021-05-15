@@ -5,7 +5,8 @@ from httpx import AsyncClient
 from app.api import app
 from app.db.service import recreate_tables, create_defaults
 
-NEW_BLOCK_SET_NAME = "New Blockset"
+NEW_BLOCK_SET_NAME1 = "New Blockset"
+NEW_BLOCK_SET_NAME2 = "Other Blockset"
 APP_PATH1 = "/path/to/app"
 APP_PATH2 = "/path/to/other/app"
 
@@ -44,11 +45,11 @@ async def test_block_set_insert_and_remove():
         assert before_response.status_code == 200
         assert len(before_block_sets) == 1
         
-        insert_response = await ac.post("/block_sets/", json={"name": NEW_BLOCK_SET_NAME})
+        insert_response = await ac.post("/block_sets/", json={"name": NEW_BLOCK_SET_NAME1})
         new_block_set = insert_response.json()
 
         assert insert_response.status_code == 200
-        assert new_block_set["name"] == NEW_BLOCK_SET_NAME
+        assert new_block_set["name"] == NEW_BLOCK_SET_NAME1
         assert new_block_set["id"] == 2
 
         after_insert_response = await ac.get("/block_sets/")
@@ -76,11 +77,11 @@ async def test_block_and_unblock():
         assert before_response.status_code == 200
         assert len(before_block_sets) == 1
 
-        insert_response = await ac.post("/block_sets/", json={"name": NEW_BLOCK_SET_NAME})
+        insert_response = await ac.post("/block_sets/", json={"name": NEW_BLOCK_SET_NAME1})
         new_block_set = insert_response.json()
 
         assert insert_response.status_code == 200
-        assert new_block_set["name"] == NEW_BLOCK_SET_NAME
+        assert new_block_set["name"] == NEW_BLOCK_SET_NAME1
         assert new_block_set["id"] == 2
         assert len(new_block_set["apps"]) == 0
 
@@ -108,7 +109,7 @@ async def test_block_and_unblock():
 @pytest.mark.asyncio
 async def test_block_existing():
     async with AsyncClient(app=app, base_url="http://test") as ac:
-        insert_response = await ac.post("/block_sets/", json={"name": NEW_BLOCK_SET_NAME})
+        insert_response = await ac.post("/block_sets/", json={"name": NEW_BLOCK_SET_NAME1})
         new_block_set = insert_response.json()
 
         assert insert_response.status_code == 200
@@ -131,7 +132,7 @@ async def test_block_existing():
 @pytest.mark.asyncio
 async def test_unblock_nonexisting():
     async with AsyncClient(app=app, base_url="http://test") as ac:
-        insert_response = await ac.post("/block_sets/", json={"name": NEW_BLOCK_SET_NAME})
+        insert_response = await ac.post("/block_sets/", json={"name": NEW_BLOCK_SET_NAME1})
         new_block_set = insert_response.json()
 
         assert insert_response.status_code == 200
@@ -152,5 +153,46 @@ async def test_unblock_nonexisting():
         
         assert unblock_response.status_code == 404
 
+@pytest.mark.asyncio
+async def test_block_unblock_multiple_block_sets():
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        insert_response_1 = await ac.post("/block_sets/", json={"name": NEW_BLOCK_SET_NAME1})
+        new_block_set_1 = insert_response_1.json()
+
+        insert_response_2 = await ac.post("/block_sets/", json={"name": NEW_BLOCK_SET_NAME2})
+        new_block_set_2 = insert_response_2.json()
+
+        block_response_1 = await ac.post(
+            "/block_sets/{}/block/".format(new_block_set_1["id"]),
+            json=[{"app_path": APP_PATH1},{"app_path": APP_PATH2}])
+        block_set_blocked_1 = block_response_1.json()
+
+        assert block_response_1.status_code == 200
+        assert block_set_blocked_1["id"] == new_block_set_1["id"]
+        assert len(block_set_blocked_1["apps"]) == 2
+
+        block_response_2 = await ac.post(
+            "/block_sets/{}/block/".format(new_block_set_2["id"]),
+            json=[{"app_path": APP_PATH1},{"app_path": APP_PATH2}])
+        block_set_blocked_1 = block_response_2.json()
+
+        assert block_response_2.status_code == 200
+        assert block_set_blocked_1["id"] == new_block_set_2["id"]
+        assert len(block_set_blocked_1["apps"]) == 2
+
+        unblock_response = await ac.post(
+            "/block_sets/{}/unblock/".format(new_block_set_2["id"]),
+            json=[{"app_path": APP_PATH2}])
+        block_set_2_refreshed = unblock_response.json()
+
+        assert unblock_response.status_code == 200
+        assert block_set_2_refreshed["id"] == new_block_set_2["id"]
+        assert len(block_set_2_refreshed["apps"]) == 1
+        
+        get_response = await ac.get(
+            "/block_sets/{}".format(new_block_set_1["id"]))
+        block_set_1_refreshed = get_response.json()
+
+        assert len(block_set_1_refreshed["apps"]) == 2
 
 # todo: Timeframes
