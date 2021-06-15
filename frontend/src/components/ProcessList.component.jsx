@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from "react";
-import './ProcessListStyle.css';
+import './ProcessList.styles.css';
 
 export default function ProcessList(props) {
     const [data, setData] = useState([]);

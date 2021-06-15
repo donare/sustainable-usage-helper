@@ -1,6 +1,6 @@
 import './App.css';
 
-import ProcessList from './components/ProcessList';
+import ProcessList from './components/ProcessList.component';
 
 function App() {
   return (

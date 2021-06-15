@@ -1,0 +1,50 @@
+.Pid{
+    background-color: lightgray;
+    border: 0.3vh solid darkgray;
+    border-radius: 0.5vh;
+    padding-inline: 0.4vh;
+}
+
+.PTable{
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+tbody tr{
+    border-bottom: 0.2vh solid black;
+}
+
+tbody tr td {
+    border-left: 0.2vh solid black;
+    border-right: 0.2vh solid black;
+    padding-left: 0.8vh;
+    padding-right: 0.8vh;
+    padding-top: 0.2vh;
+    padding-bottom: 0.2vh;
+}
+
+
+thead tr th {
+    border: 0.4vh solid black;
+}
+
+td {
+    text-align: left;
+}
+
+th.icon{
+    width: 5%;
+}
+
+th.pid{
+    width:35%;
+}
+
+th.application{
+    width:60%;
+}
+
+.PTableCell{
+    word-wrap: anywhere;
+    text-align: left;
+}
