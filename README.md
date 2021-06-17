@@ -1,5 +1,7 @@
 # Build Application
 
+Run `build.bat` (requires virtual environment called `venv`) or execute `pyinstaller` manually:
+
 ```powershell
 pyinstaller --additional-hooks-dir=pyinstaller-hooks --onefile --add-data "icon.png;." --icon "icon.ico" --noconsole --name="SUH" main.py
 ```
