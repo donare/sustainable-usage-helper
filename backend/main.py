@@ -1,5 +1,6 @@
 import sys
 from PIL import Image
+from os.path import join, abspath, dirname
 
 import pystray
 
@@ -18,5 +19,7 @@ menu_item_quit = pystray.MenuItem(text="Quit", action=on_quit)
 
 menu = pystray.Menu(menu_item_toggle, menu_item_quit)
 
-icon = pystray.Icon(name='test name', icon=Image.open("icon.png"), menu=menu).run()
+icon_path = abspath(join(dirname(__file__), 'icon.png')) 
+        
+icon = pystray.Icon(name='test name', icon=Image.open(icon_path), menu=menu).run()
 
