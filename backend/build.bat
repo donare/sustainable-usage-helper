@@ -5,4 +5,4 @@ CALL venv\Scripts\activate.bat
 
 ECHO Building Package
 
-pyinstaller --additional-hooks-dir=pyinstaller-hooks --onefile --add-data "icon.png;." --icon "icon.ico" --noconsole --name="SUH" main.py
+pyinstaller --additional-hooks-dir=pyinstaller-hooks --onefile --add-data "app/icon.png;./app" --icon "app/icon.ico" --noconsole --name="SUH" main.py
